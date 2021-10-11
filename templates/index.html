@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+  <meta charset="UTF-8">
+  <title>Find trains</title>
+
+  <link rel="stylesheet" href="">
+  <style>
+  </style>
+  <script src=""></script>
+  <body>
+    <div style="text-align:center" >
+      <h3>The following trains are on their way to {{station}} Station:</h3>
+      {% if t %}
+      {% for train in t %}
+        <p> {{train['route_id']}} train coming in {{train['mins']}} mins</p>
+      {% endfor %}
+      {% endif %}
+    </div>
+  </body>
+</html>
