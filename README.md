@@ -2,4 +2,4 @@ I take the train to Connecticut throughout the week, first riding the subway to 
 
 This Flask + Twilio + MTA api application sends via text a list of upcoming subway trains (north bound only, currently) at a given station. 
 
-Text your Station to the number and receive the list of trains!
+Text your station to the number and receive the list of trains!
