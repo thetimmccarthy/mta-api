@@ -3,12 +3,17 @@ from mta_api import build_train_info, get_upcoming_trains
 import os
 import pandas as pd
 import sys
+from flask_ngrok import run_with_ngrok
+from twilio.twiml.messaging_response import MessagingResponse, Message
+
 from dotenv import load_dotenv
 load_dotenv()
 
 from mta_api import get_station_code, build_train_info, get_upcoming_trains
 
 app = Flask(__name__)
+
+run_with_ngrok(app)
 
 url = 'https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs'
 headers = {
@@ -36,14 +41,41 @@ def home():
 
     return 'Hello'
 
-@app.route('/station/<station>')
-def get_trains(station):
+@app.route('/sms', methods=['POST'])
+def get_trains():
 
-    station_lower = station.lower()
+
+
+    from_number = request.form['From']
+
+    station_lower = request.form['Body']
+    station_lower = station_lower.lower()
+
     code = get_station_code(station_lower, trains, subway_stops)
     found_trains = get_upcoming_trains(train_info, code, limit=5)
 
-    return render_template('index.html', t=found_trains, station=station.title())
+    train_response = ['{} train coming in {} mins. \n '.format(train['route_id'], train['mins']) for train in found_trains]
+
+    joined_response = 'The following trains are coming: \n' + ''.join(train_response)
+
+    resp = MessagingResponse()
+
+    resp.message(joined_response)
+    return str(resp)
+
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run()
+
+# Old code for web app
+# @app.route('/station/<station>')
+# def get_trains(station):
+#     station_lower = station.lower()
+#     code = get_station_code(station_lower, trains, subway_stops)
+#     found_trains = get_upcoming_trains(train_info, code, limit=5)
+#
+#     train_response = ['{} train coming in {} mins. \n '.format(train['route_id'], train['mins']) for train in found_trains]
+#
+#     joined_response = 'The following trains are coming: \n' + ''.join(train_response)
+#     return joined_response
+#     # return render_template('index.html', t=found_trains, station=station.title())
