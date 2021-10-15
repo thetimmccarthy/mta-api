@@ -10,6 +10,9 @@ load_dotenv()
 # TODO: add function to return all subway stops for given train(s)
 
 def get_station_code(station_name, trains, df):
+    '''
+
+    '''
     station_name = station_name.lower()
 
     # filter for stop name == station name provided, running on given set of train lines
@@ -19,8 +22,14 @@ def get_station_code(station_name, trains, df):
 
     return df[filter]['stop_id'].values[0]
 
+
+
 # Need to test, but guessing this is what is slowing down the application
 def build_train_info(url, headers, trains):
+    '''
+    Accepts a mta-api url, headers (containing your api key), and list of trains,
+    and then returns a Pandas DataFrame containing train info.
+    '''
 
     feed = gtfs_realtime_pb2.FeedMessage()
     response = requests.get(url, headers=headers)
@@ -54,7 +63,7 @@ def build_train_info(url, headers, trains):
     return stop_time_update
 
 def get_upcoming_trains(df, station_code, direction='N', limit=None):
-
+    
     filter = df['stop_id'] == str(station_code) + direction
     upcoming_trains = df[filter].sort_values(by=['arrival'])
 

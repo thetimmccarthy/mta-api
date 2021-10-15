@@ -35,16 +35,8 @@ subway_stops['train'] = subway_stops.apply(lambda row: add_train_line(row), axis
 
 train_info = build_train_info(url, headers, trains)
 
-@app.route('/')
-def home():
-    print(request, flush=True)
-
-    return 'Hello'
-
 @app.route('/sms', methods=['POST'])
 def get_trains():
-
-
 
     from_number = request.form['From']
 
