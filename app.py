@@ -1,5 +1,5 @@
 from flask import Flask, request, redirect, url_for, render_template
-from mta_api import build_train_info, get_upcoming_trains
+from mta_api import build_all_train_info, get_upcoming_trains
 import os
 import pandas as pd
 import sys
@@ -15,12 +15,12 @@ app = Flask(__name__)
 
 run_with_ngrok(app)
 
-url = 'https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs'
+base_mta_url = 'https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs'
 headers = {
   "x-api-key": os.getenv('MTA_API_KEY')
 }
 
-trains = ['4', '5', '6']
+mta_links = {'ace':'-ace', 'bdfm':'-bdfm', 'g':'-g', 'jz':'-jz', 'nqrw':'-nqrw', 'l':'-l', '1234567':''}
 
 subway_stops = pd.read_csv('./nyc_subway_stops.csv')
 
@@ -33,10 +33,12 @@ def add_train_line(row):
 subway_stops['stop_name'] = subway_stops.apply(lambda row: normalize_stop_name(row), axis=1)
 subway_stops['train'] = subway_stops.apply(lambda row: add_train_line(row), axis=1)
 
-train_info = build_train_info(url, headers, trains)
+train_info = build_all_train_info(mta_links.values(), headers)
 
 @app.route('/sms', methods=['POST'])
 def get_trains():
+
+    trains = ['4', '5', '6']
 
     from_number = request.form['From']
 
@@ -44,7 +46,7 @@ def get_trains():
     station_lower = station_lower.lower()
 
     code = get_station_code(station_lower, trains, subway_stops)
-    found_trains = get_upcoming_trains(train_info, code, limit=5)
+    found_trains = get_upcoming_trains(train_info, code, limit=5, trains=trains)
 
     train_response = ['{} train coming in {} mins. \n '.format(train['route_id'], train['mins']) for train in found_trains]
 
@@ -58,16 +60,3 @@ def get_trains():
 
 if __name__ == '__main__':
     app.run()
-
-# Old code for web app
-# @app.route('/station/<station>')
-# def get_trains(station):
-#     station_lower = station.lower()
-#     code = get_station_code(station_lower, trains, subway_stops)
-#     found_trains = get_upcoming_trains(train_info, code, limit=5)
-#
-#     train_response = ['{} train coming in {} mins. \n '.format(train['route_id'], train['mins']) for train in found_trains]
-#
-#     joined_response = 'The following trains are coming: \n' + ''.join(train_response)
-#     return joined_response
-#     # return render_template('index.html', t=found_trains, station=station.title())
