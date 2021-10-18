@@ -12,9 +12,7 @@ base_mta_url = 'https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgt
 # TODO: add function to return all subway stops for given train(s)
 
 def get_station_code(station_name, trains, df):
-    '''
 
-    '''
     station_name = station_name.lower()
 
     # filter for stop name == station name provided, running on given set of train lines
@@ -34,9 +32,7 @@ def build_all_train_info(lines, headers):
 
     return all_train_info
 
-# Need to test, but guessing this is what is slowing down the application
 def build_train_info(line, headers):
-
     '''
     Accepts a mta-api url, headers (containing your api key)
     and then returns a Pandas DataFrame containing train info.
