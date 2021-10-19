@@ -27,7 +27,12 @@ def create_station_list(row):
     stops = str(row['Daytime Routes'])
     return stops.split(',')
 
+def normalize_route_id(row):
+    return str(row['Route ID'])
+
+
 subway_stops['train'] = subway_stops.apply(lambda row: create_station_list(row), axis=1)
+subway_stops['Route ID'] = subway_stops.apply(lambda row: normalize_route_id(row), axis=1)
 subway_stops = subway_stops.explode('train')
 subway_stops = subway_stops.drop(columns=['Division', 'Line', 'Borough', 'Daytime Routes', 'Structure', 'ADA', 'ADA Notes'])
 
@@ -60,12 +65,13 @@ def get_stations_trains():
     trains = list(subway_stops['train'].unique())
 
     train_stops = {}
+    # train_stops = []
     for train in trains:
         filter = subway_stops['train'] == train
         stops = dict(zip(subway_stops[filter]['Route ID'], subway_stops[filter]['Stop Name']))
-
         train_stops[train] = stops
-    print(train_stops)
+
+    # print(train_stops)
     return train_stops
 
 
