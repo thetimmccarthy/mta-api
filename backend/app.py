@@ -1,12 +1,10 @@
 from flask import Flask, request, redirect, url_for, render_template
-from mta_api import build_all_train_info, get_upcoming_trains
+from mta_api import build_all_train_info, get_upcoming_trains, get_station_code
 import os
 import pandas as pd
 import sys
 from twilio.twiml.messaging_response import MessagingResponse, Message
 from flask_cors import CORS
-
-
 
 from dotenv import load_dotenv
 load_dotenv()
@@ -23,16 +21,15 @@ headers = {
 
 mta_links = {'ace':'-ace', 'bdfm':'-bdfm', 'g':'-g', 'jz':'-jz', 'nqrw':'-nqrw', 'l':'-l', '1234567':''}
 
-subway_stops = pd.read_csv('./nyc_subway_stops.csv')
+subway_stops = pd.read_excel('./Stations.xls')
 
-def normalize_stop_name(row):
-    return row['stop_name'].lower()
+def create_station_list(row):
+    stops = str(row['Daytime Routes'])
+    return stops.split(',')
 
-def add_train_line(row):
-    return row['stop_id'][0]
-
-# subway_stops['stop_name'] = subway_stops.apply(lambda row: normalize_stop_name(row), axis=1)
-subway_stops['train'] = subway_stops.apply(lambda row: add_train_line(row), axis=1)
+subway_stops['train'] = subway_stops.apply(lambda row: create_station_list(row), axis=1)
+subway_stops = subway_stops.explode('train')
+subway_stops = subway_stops.drop(columns=['Division', 'Line', 'Borough', 'Daytime Routes', 'Structure', 'ADA', 'ADA Notes'])
 
 train_info = build_all_train_info(mta_links.values(), headers)
 
@@ -60,12 +57,16 @@ def get_trains():
 @app.route('/stations', methods=['GET'])
 # @cross_origin
 def get_stations_trains():
-    train = '5'
-    filters = (subway_stops['train'] == train) & (subway_stops['location_type'] == 1)
-    trains = subway_stops[filters]['stop_name'].to_dict()
+    trains = list(subway_stops['train'].unique())
 
-    return trains
+    train_stops = {}
+    for train in trains:
+        filter = subway_stops['train'] == train
+        stops = dict(zip(subway_stops[filter]['Route ID'], subway_stops[filter]['Stop Name']))
 
+        train_stops[train] = stops
+    print(train_stops)
+    return train_stops
 
 
 if __name__ == '__main__':

@@ -17,10 +17,9 @@ def get_station_code(station_name, trains, df):
 
     # filter for stop name == station name provided, running on given set of train lines
     # and get parent stop id (not N or S)
-    filter = (df['stop_name'] == station_name) & (df['train'].isin(trains)) \
-        & df['location_type'] == 1
+    filter = (df['Stop Name'] == station_name) & (df['train'].isin(trains))
 
-    return df[filter]['stop_id'].values[0]
+    return df[filter]['Route ID'].values[0]
 
 
 def build_all_train_info(lines, headers):
