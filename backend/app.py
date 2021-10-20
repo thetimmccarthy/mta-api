@@ -61,7 +61,7 @@ def get_trains():
 
 @app.route('/stations', methods=['GET'])
 # @cross_origin
-def get_stations_trains():
+def get_stations():
     trains = list(subway_stops['train'].unique())
 
     train_stops = {}
@@ -74,6 +74,8 @@ def get_stations_trains():
     # print(train_stops)
     return train_stops
 
+# @app.route('/trains', methods=['GET'])
+# def get_trains()
 
 if __name__ == '__main__':
     app.debug = True
