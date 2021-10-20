@@ -39,7 +39,7 @@ subway_stops = subway_stops.drop(columns=['Division', 'Line', 'Borough', 'Daytim
 train_info = build_all_train_info(mta_links.values(), headers)
 
 @app.route('/sms', methods=['POST'])
-def get_trains():
+def get_trains_sms():
     '''
     This function is used to return upcoming trains when texted a station (via twilio).
     '''
@@ -74,8 +74,19 @@ def get_stations():
     # print(train_stops)
     return train_stops
 
-# @app.route('/trains', methods=['GET'])
-# def get_trains()
+# TODO: Look into returning arrays to 'fetch' call from React
+
+# Will need to add direction to this as a parameter, and will need to put build_all_train_info on a loop
+@app.route('/trains/<id>', methods=['GET'])
+def get_trains():
+    train_info_2 = build_all_train_info(mta_links.values(), headers)
+    found_trains = get_upcoming_trains(train_info, station_code, limit=5, trains=trains)
+
+    to_return = {}
+    for i in range(len(found_trains)):
+        to_return[i] = found_trains[i]
+
+    return to_return
 
 if __name__ == '__main__':
     app.debug = True

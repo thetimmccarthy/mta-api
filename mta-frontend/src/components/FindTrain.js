@@ -6,9 +6,13 @@ function FindTrain() {
   const [allStations, setAllStations] = useState({})
   const [stations, setStations] = useState({});
   const [showStations, setShowStations] = useState(false);
+  const [upcomingTrains, setUpcomingTrains] = useState([]);
+  const [showUpcomingTrains, setShowUpcomingTrains] = useState(false);
+
+  let url = 'http://localhost:5000/'
   useEffect(() => {
-    let url = 'http://localhost:5000/stations'
     
+    url = url + 'stations'
     fetch(url)
       .then(res => res.json())
       .then((result) => {
@@ -27,6 +31,25 @@ function FindTrain() {
 
   }
 
+  const onChangeStation = (event) => {
+    event.preventDefault();
+    let id = event.target.value;
+
+    url = url + `trains/${id}`
+
+    fetch(url)
+      .then(res => res.json())
+      .then((result) => {
+        let r = []
+        Object.keys(result).map(x => {
+          return r.push(result[x])
+        })
+        setUpcomingTrains(r);
+        setShowUpcomingTrains(true);
+      })
+
+  }
+
   let stationList;
   if (showStations) {
     stationList = (
@@ -38,6 +61,9 @@ function FindTrain() {
        </select> 
     )
   }
+
+  
+  
 
   return (
     <div>
