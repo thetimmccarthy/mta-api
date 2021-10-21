@@ -35,7 +35,7 @@ subway_stops['train'] = subway_stops.apply(lambda row: create_station_list(row),
 subway_stops['Route ID'] = subway_stops.apply(lambda row: normalize_route_id(row), axis=1)
 subway_stops = subway_stops.explode('train')
 subway_stops = subway_stops.drop(columns=['Division', 'Line', 'Borough', 'Daytime Routes', 'Structure', 'ADA', 'ADA Notes'])
-
+subway_stops = subway_stops.fillna(0)
 train_info = build_all_train_info(mta_links.values(), headers)
 
 @app.route('/sms', methods=['POST'])
@@ -71,21 +71,23 @@ def get_stations():
         stops = dict(zip(subway_stops[filter]['Route ID'], subway_stops[filter]['Stop Name']))
         train_stops[train] = stops
 
-    # print(train_stops)
-    return train_stops
+    north_south = dict(zip(subway_stops['Route ID'].values, subway_stops[['North Direction Label', 'South Direction Label']].values.tolist()))
+    mta_info = {'direction': north_south, 'train_stops': train_stops}
+    return mta_info
 
 # TODO: Look into returning arrays to 'fetch' call from React
 
 # Will need to add direction to this as a parameter, and will need to put build_all_train_info on a loop
-@app.route('/trains/<id>', methods=['GET'])
-def get_trains():
-    train_info_2 = build_all_train_info(mta_links.values(), headers)
-    found_trains = get_upcoming_trains(train_info, station_code, limit=5, trains=trains)
+@app.route('/trains/<train>/<station_id>/<direction>', methods=['GET'])
+def get_trains(train, station_id, direction):
 
+    train_info_2 = build_all_train_info(mta_links.values(), headers)
+    found_trains = get_upcoming_trains(train_info, station_id, direction=direction, limit=5, trains=[train])
+    print(found_trains)
     to_return = {}
     for i in range(len(found_trains)):
-        to_return[i] = found_trains[i]
-
+        to_return[i] = found_trains[i]['mins']
+    print(to_return)
     return to_return
 
 if __name__ == '__main__':

@@ -83,7 +83,8 @@ def get_upcoming_trains(df, station_code, direction='N', limit=None, trains=['4'
     upcoming = []
     now = datetime.now()
     for index, row in df_upcoming_trains.iterrows():
-        time = row['arrival']
+        time = row['depart']
+        
         delta = time - now
         mins = round(delta.total_seconds() / 60 )
         if mins > 0:
