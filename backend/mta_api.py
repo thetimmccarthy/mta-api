@@ -19,7 +19,7 @@ def get_station_code(station_name, trains, df):
     # and get parent stop id (not N or S)
     filter = (df['Stop Name'] == station_name) & (df['train'].isin(trains))
 
-    return df[filter]['Route ID'].values[0]
+    return df[filter]['route_id'].values[0]
 
 
 def build_all_train_info(lines, headers):
@@ -84,10 +84,20 @@ def get_upcoming_trains(df, station_code, direction='N', limit=None, trains=['4'
     now = datetime.now()
     for index, row in df_upcoming_trains.iterrows():
         time = row['depart']
-        
+
         delta = time - now
         mins = round(delta.total_seconds() / 60 )
         if mins > 0:
             upcoming.append({'route_id': row['route_id'], 'mins': mins})
 
     return upcoming if limit == None else upcoming[:limit]
+
+def get_upcoming_trains_for_station_list(df, station_list):
+    station_list_filter = (df['stop_id'].str.contains('|'.join(station_list))) & (df['depart'] != 'N/A')
+
+    df_upcoming_trains = df[station_list_filter]
+    # print(df_upcoming_trains)
+    print(df_upcoming_trains[['stop_id', 'route_id', 'depart']].values.tolist())
+    train_results = dict(zip(df_upcoming_trains.index, df_upcoming_trains[['stop_id', 'route_id', 'depart']].values.tolist()))
+    # print(train_results)
+    return train_results

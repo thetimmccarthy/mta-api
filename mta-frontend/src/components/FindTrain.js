@@ -17,7 +17,7 @@ function FindTrain() {
   const [selectedStation, setSelectedStation] = useState();
   // list of upcoming trains for train line and station
   const [upcomingTrains, setUpcomingTrains] = useState([]);
-
+  const [favoriteStations, setFavoriteStations] = useState([]);
 
   // bool to determine if should show upcoming trains
   const [showUpcomingTrains, setShowUpcomingTrains] = useState(false);
@@ -74,6 +74,11 @@ function FindTrain() {
         setUpcomingTrains(r);
         setShowUpcomingTrains(true);
       })
+  }
+
+  const addStationToFavorites = (event) => {
+    event.preventDefault();
+    setFavoriteStations([...favoriteStations, selectedStation]);
   }
 
   let stationList;
@@ -133,7 +138,8 @@ function FindTrain() {
       {stationList}
       {directionList}
       {trainList}
-    
+      <h4>Add station to favorites!</h4>
+      <button onClick={addStationToFavorites} >Add</button>
     </div>
   )
 }
