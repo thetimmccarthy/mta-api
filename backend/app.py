@@ -1,13 +1,15 @@
 from flask import Flask, request, redirect, url_for, render_template
-import mta_api
 import os
 import pandas as pd
 import sys
 from twilio.twiml.messaging_response import MessagingResponse, Message
 from flask_cors import CORS
-
+from streamz.dataframe import PeriodicDataFrame
 from dotenv import load_dotenv
 load_dotenv()
+
+import mta_api
+from build_subway_info import build_subway_info
 
 app = Flask(__name__)
 CORS(app)
@@ -19,21 +21,8 @@ headers = {
 
 mta_links = {'ace':'-ace', 'bdfm':'-bdfm', 'g':'-g', 'jz':'-jz', 'nqrw':'-nqrw', 'l':'-l', '1234567':''}
 
-subway_stops = pd.read_excel('./Stations.xls')
 
-def create_station_list(row):
-    stops = str(row['Daytime Routes'])
-    return stops.split(',')
-
-def normalize_route_id(row):
-    return str(row['Route ID'])
-
-
-subway_stops['train'] = subway_stops.apply(lambda row: create_station_list(row), axis=1)
-subway_stops['route_id'] = subway_stops.apply(lambda row: normalize_route_id(row), axis=1)
-subway_stops = subway_stops.explode('train')
-subway_stops = subway_stops.drop(columns=['Division', 'Line', 'Borough', 'Daytime Routes', 'Structure', 'ADA', 'ADA Notes'])
-subway_stops = subway_stops.fillna(0)
+subway_stops = build_subway_info('./Stations.xls')
 train_info = mta_api.build_all_train_info(mta_links.values(), headers)
 
 @app.route('/sms', methods=['POST'])
@@ -63,7 +52,6 @@ def get_stations():
     trains = list(subway_stops['train'].unique())
 
     train_stops = {}
-    # train_stops = []
     for train in trains:
         filter = subway_stops['train'] == train
         stops = dict(zip(subway_stops[filter]['route_id'], subway_stops[filter]['Stop Name']))
@@ -80,10 +68,11 @@ def get_stations():
 def get_trains(train, station_id, direction):
 
     train_info_2 = mta_api.build_all_train_info(mta_links.values(), headers)
-    found_trains = mta_api.get_upcoming_trains(train_info, station_id, direction=direction, limit=5, trains=[train])
+    found_trains = mta_api.get_upcoming_trains(train_info, station_id, direction=direction, trains=[train])
     to_return = {}
     for i in range(len(found_trains)):
-        to_return[i] = found_trains[i]['mins']
+        # to_return[i] = found_trains[i]['mins']
+        to_return[i] = found_trains[i]['time']
 
     return to_return
 
@@ -93,6 +82,21 @@ def get_trains_for_favorites(favorites):
     train_info_2 = mta_api.build_all_train_info(mta_links.values(), headers)
     trains = mta_api.get_upcoming_trains_for_station_list(train_info_2, favorite_station_ids);
     return trains
+
+counter = 0
+def test_streams(**kwargs):
+    global counter
+    counter += 1
+    df = pd.DataFrame(columns=['Time', 'Score'])
+    df = df.append({'Time':pd.Timestamp.now(), 'Score': counter }, ignore_index=True)
+    return df.set_index('Time')
+
+df = PeriodicDataFrame(test_streams, interval='30s')
+
+@app.route('/', methods=['GET'])
+def test():
+    print(df)
+    return df.to_dict()
 
 if __name__ == '__main__':
     app.debug = True

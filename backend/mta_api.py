@@ -88,7 +88,7 @@ def get_upcoming_trains(df, station_code, direction='N', limit=None, trains=['4'
         delta = time - now
         mins = round(delta.total_seconds() / 60 )
         if mins > 0:
-            upcoming.append({'route_id': row['route_id'], 'mins': mins})
+            upcoming.append({'route_id': row['route_id'], 'mins': mins, 'time': time})
 
     return upcoming if limit == None else upcoming[:limit]
 
