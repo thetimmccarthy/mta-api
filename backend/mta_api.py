@@ -101,7 +101,7 @@ def get_upcoming_trains_for_station_list(df, station_list):
     for station in station_list:
         stop_name = get_station_name(station)
         station_filter = (df['stop_id'].str.contains(station)) & (df['depart'] != 'N/A')
-        station_result = {'stop_name': stop_name, 'trains': df[station_filter][['stop_id', 'route_id', 'depart']].values.tolist()}
+        station_result = {'stop_name': stop_name, 'trains': df[station_filter][['stop_id', 'route_id', 'depart']].values.tolist()[:5]}
         all_results[station] = station_result
 
     return all_results

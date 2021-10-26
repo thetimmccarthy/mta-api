@@ -70,8 +70,8 @@ def get_trains(train, station_id, direction):
     found_trains = mta_api.get_upcoming_trains(train_info, station_id, direction=direction, trains=[train])
     to_return = {}
     for i in range(len(found_trains)):
-        # to_return[i] = found_trains[i]['mins']
-        to_return[i] = found_trains[i]['time']
+        to_return[i] = found_trains[i]['mins']
+        # to_return[i] = found_trains[i]['time']
 
     return to_return
 

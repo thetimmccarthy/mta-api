@@ -19,6 +19,7 @@ function FindTrain() {
   // list of upcoming trains for train line and station
   const [upcomingTrains, setUpcomingTrains] = useState([]);
   const [favoriteStations, setFavoriteStations] = useState([]);
+  const [upcomingTrainsAtFavs, setUpcomingTrainsAtFavs] = useState({})
 
   // bool to determine if should show upcoming trains
   const [showUpcomingTrains, setShowUpcomingTrains] = useState(false);
@@ -39,7 +40,21 @@ function FindTrain() {
         setAllDirectionLabels(result['direction'])
         return
       })
-  },[])
+  },[]);
+
+  useEffect(() => {
+    console.log(favoriteStations)
+    let url = 'http://localhost:5000/trains/' + favoriteStations.join(',');        
+    
+    if(favoriteStations.length > 0 ) {
+        fetch(url)
+            .then(res => res.json())
+            .then((data) => {
+                setUpcomingTrainsAtFavs(data)
+                return
+            })
+        }
+}, [favoriteStations])
 
   const onChangeTrain = (event) => {
     event.preventDefault();
@@ -77,15 +92,10 @@ function FindTrain() {
   }
 
   const addStationToFavorites = (event) => {
+    
     event.preventDefault();
     setFavoriteStations([...favoriteStations, selectedStation]);
   }
-  // let favorites;
-  // if (favoriteStations.length > 0) {
-  //   favorites = (
-  //     <FavoriteStations stationIds={favoriteStations} />
-  //   )
-  // }
 
   let stationList;
   if (showStations) {
@@ -133,11 +143,10 @@ function FindTrain() {
     </div>
     )
   }
-  console.log(favoriteStations)
+
   return (
     <div>
-      {/* {favorites} */}
-      <FavoriteStations stationIds={favoriteStations} />
+      <FavoriteStations stationIds={favoriteStations} upcomingTrainsAtFavs={upcomingTrainsAtFavs}/>
       <h1> Pick a subway line below:</h1>      
       <select id="lang" onChange={onChangeTrain} >
         <option value="select"> Select Train! </option>
