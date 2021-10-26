@@ -4,7 +4,6 @@ import pandas as pd
 import sys
 from twilio.twiml.messaging_response import MessagingResponse, Message
 from flask_cors import CORS
-from streamz.dataframe import PeriodicDataFrame
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -82,21 +81,6 @@ def get_trains_for_favorites(favorites):
     train_info_2 = mta_api.build_all_train_info(mta_links.values(), headers)
     trains = mta_api.get_upcoming_trains_for_station_list(train_info_2, favorite_station_ids);
     return trains
-
-counter = 0
-def test_streams(**kwargs):
-    global counter
-    counter += 1
-    df = pd.DataFrame(columns=['Time', 'Score'])
-    df = df.append({'Time':pd.Timestamp.now(), 'Score': counter }, ignore_index=True)
-    return df.set_index('Time')
-
-df = PeriodicDataFrame(test_streams, interval='30s')
-
-@app.route('/', methods=['GET'])
-def test():
-    print(df)
-    return df.to_dict()
 
 if __name__ == '__main__':
     app.debug = True

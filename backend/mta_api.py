@@ -3,14 +3,19 @@ import pandas as pd
 from datetime import datetime
 import requests
 import os
+from build_subway_info import build_subway_info
 
 from dotenv import load_dotenv
 load_dotenv()
 
 base_mta_url = 'https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs'
 
-# TODO: add function to return all subway stops for given train(s)
+subway_stops = build_subway_info('./Stations.xls')
 
+def get_station_name(code):
+    return subway_stops[subway_stops['route_id'] == code]['Stop Name'].unique()[0]
+
+# TODO: add function to return all subway stops for given train(s)
 def get_station_code(station_name, trains, df):
 
     station_name = station_name.lower()
@@ -20,7 +25,6 @@ def get_station_code(station_name, trains, df):
     filter = (df['Stop Name'] == station_name) & (df['train'].isin(trains))
 
     return df[filter]['route_id'].values[0]
-
 
 def build_all_train_info(lines, headers):
 
@@ -93,11 +97,11 @@ def get_upcoming_trains(df, station_code, direction='N', limit=None, trains=['4'
     return upcoming if limit == None else upcoming[:limit]
 
 def get_upcoming_trains_for_station_list(df, station_list):
-    station_list_filter = (df['stop_id'].str.contains('|'.join(station_list))) & (df['depart'] != 'N/A')
+    all_results = {}
+    for station in station_list:
+        stop_name = get_station_name(station)
+        station_filter = (df['stop_id'].str.contains(station)) & (df['depart'] != 'N/A')
+        station_result = {'stop_name': stop_name, 'trains': df[station_filter][['stop_id', 'route_id', 'depart']].values.tolist()}
+        all_results[station] = station_result
 
-    df_upcoming_trains = df[station_list_filter]
-    # print(df_upcoming_trains)
-    print(df_upcoming_trains[['stop_id', 'route_id', 'depart']].values.tolist())
-    train_results = dict(zip(df_upcoming_trains.index, df_upcoming_trains[['stop_id', 'route_id', 'depart']].values.tolist()))
-    # print(train_results)
-    return train_results
+    return all_results

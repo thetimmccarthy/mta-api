@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react'
+import FavoriteStations from './FavoriteStations';
 
 function FindTrain() {
 
@@ -10,7 +11,7 @@ function FindTrain() {
   const [allDirectionLabels, setAllDirectionLabels] = useState({});
 
   // currently selected train
-  const [selectedTrain, setSelectedTrain] = useState()
+  const [selectedTrain, setSelectedTrain] = useState();
   // stations of currently selected train line
   const [stations, setStations] = useState({});
   // id of selected station
@@ -26,7 +27,6 @@ function FindTrain() {
   // bool to deteremine if should should 'direction' drop down
   const [showDirections, setShowDirections] = useState(false);
   
-
   let url = 'http://localhost:5000/'
   useEffect(() => {
     
@@ -80,6 +80,12 @@ function FindTrain() {
     event.preventDefault();
     setFavoriteStations([...favoriteStations, selectedStation]);
   }
+  // let favorites;
+  // if (favoriteStations.length > 0) {
+  //   favorites = (
+  //     <FavoriteStations stationIds={favoriteStations} />
+  //   )
+  // }
 
   let stationList;
   if (showStations) {
@@ -121,12 +127,17 @@ function FindTrain() {
           return <li value={t}> {`${t} mins`} </li>
         })}
       </ul>
+      <br/>
+      <h4>Add station to favorites!</h4>
+      <button onClick={addStationToFavorites} >Add</button>
     </div>
     )
   }
-
+  console.log(favoriteStations)
   return (
     <div>
+      {/* {favorites} */}
+      <FavoriteStations stationIds={favoriteStations} />
       <h1> Pick a subway line below:</h1>      
       <select id="lang" onChange={onChangeTrain} >
         <option value="select"> Select Train! </option>
@@ -138,8 +149,7 @@ function FindTrain() {
       {stationList}
       {directionList}
       {trainList}
-      <h4>Add station to favorites!</h4>
-      <button onClick={addStationToFavorites} >Add</button>
+      
     </div>
   )
 }
