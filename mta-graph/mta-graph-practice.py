@@ -4,9 +4,11 @@ import datetime
 from collections import defaultdict
 import heapq
 
-# READ EDGES instead of whole stop_times file
+# Uncomment to read edges (instead of building whole  edge file from stop_times file)
 # edges = pd.read_csv('./edges.csv')
 
+# read the 'stop_times' file and build a csv of edges
+# easier to build the csv once and then read in edges than continuously build list of edges
 def build_edges_csv():
 
     stop_times = pd.read_csv('./stop_times.csv')
@@ -109,7 +111,7 @@ def print_graph(g):
         print('-----')
 
 
-
+# Dijkstra's algorithm implemented using python's heapq module
 def find_shortest_path(qraph, start, end):
     shortest_path = defaultdict(lambda: float('inf'))
     shortest_path[start] = 0
@@ -141,7 +143,7 @@ def find_shortest_path(qraph, start, end):
 
     return shortest_path, parent
 
-
+# practice edges for testing dijkstra's/graph
 ab = ('A', 'B', 2)
 ad = ('A', 'D', 8)
 bd = ('B', 'D', 5)
@@ -154,18 +156,20 @@ fc = ('F', 'C', 3)
 
 edges = [ab, ad, bd, be, df, de, ef, ec, fc]
 
-
 graph = Graph()
 read_graph(graph, edges, False)
-# print_graph(graph)
 p, j = find_shortest_path(graph, 'A', 'C')
-print(j)
+
+# print key: val where key = vertex, val = distance (or cost or time) from start vertex
 print('{')
 for key, value in p.items():
     print(key, ': ', int(value), ',')
-
 print('}')
 
+# print out the path taken from start to end
+# with subway trains, we can edit this to print path of stations needed
+# i.e. start_station -> intermediate stations -> end
+# can update to only get station if changing trains
 def print_path(res, start, end):
     if start == end:
         return []
