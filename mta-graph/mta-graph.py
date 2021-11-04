@@ -3,16 +3,27 @@ import time
 import datetime
 from collections import defaultdict
 import heapq
+import os
+import csv
 
-# Uncomment to read edges (instead of building whole  edge file from stop_times file)
-# edges = pd.read_csv('./edges.csv')
+stations = pd.read_excel('./mta-graph/Stations.xls')
+stations['Route ID'] = stations['Route ID'].astype(str)
+
+def get_station_name(key):
+
+    try:
+        x = stations[stations['Route ID'] == key]['Stop Name']
+        return x.values[0]
+    except IndexError:
+        return key
+
 
 # read the 'stop_times' file and build a csv of edges
 # easier to build the csv once and then read in edges than continuously build list of edges
 def build_edges_csv():
-
+    print(os.getcwd())
     stop_times = pd.read_csv('./stop_times.csv')
-
+    transfers = pd.read_csv('./transfers.csv')
     edges_dict = set()
     edges = []
     start_time = time.time()
@@ -23,6 +34,13 @@ def build_edges_csv():
         result = (hours * 3600) + (mins * 60) + secs
         return result
 
+
+    for index, value in transfers.iterrows():
+        pair = (value['from_stop_id'], value['to_stop_id'])
+        pair_weighted = (pair[0], pair[1], value['min_transfer_time'])
+
+        if pair not in edges_dict and pair[0] != pair[1]:
+            edges.append(pair_weighted)
 
     for index, value in stop_times.iterrows():
         if index == 0:
@@ -45,7 +63,6 @@ def build_edges_csv():
                 edges_dict.add(pair)
                 edges.append(pair_weighted)
 
-
         pd.DataFrame(edges, columns=['from', 'to', 'weight']).to_csv('edges.csv')
 
 
@@ -54,6 +71,7 @@ class Station:
         self.station_id = ""
         self.weight = 0
         self.next_station = None
+        self.station_name = ""
 
 class Graph:
     def __init__(self):
@@ -69,20 +87,34 @@ def read_graph(g, edges, directed):
 
     g.directed = directed
 
-    for edge in edges:
-        x = edge[0]
-        y = edge[1]
-        w = edge[2]
-        insert_edge(g, x, y, w, directed)
+    if isinstance(edges, pd.DataFrame):
+        for index, row in edges.iterrows():
+            x = row['from']
+            y = row['to']
+            w = row['weight']
+            name = get_station_name(y)
+            insert_edge(g, x, y, w, name, directed)
 
-    g.vertices = len(g.edges.keys())
+        g.vertices = len(edges)
 
-def insert_edge(g, start_station, end_station, weight, directed):
+    else:
+        for edge in edges:
+
+            x = edge[0]
+            y = edge[1]
+            w = edge[2]
+            name = get_station_name(y)
+
+            insert_edge(g, x, y, w, name, directed)
+
+        g.vertices = len(g.edges.keys())
+
+def insert_edge(g, start_station, end_station, weight, name, directed):
 
     end = Station()
     end.station_id = end_station
     end.weight = weight
-
+    end.station_name = name
     if start_station in g.edges:
 
         temp = g.edges[start_station]
@@ -94,7 +126,7 @@ def insert_edge(g, start_station, end_station, weight, directed):
         g.degrees[start_station] = 1
 
     if not directed:
-        insert_edge(g, end_station, start_station, weight, True)
+        insert_edge(g, end_station, start_station, weight,name, True)
     else:
         g.nedges += 1
 
@@ -102,11 +134,14 @@ def insert_edge(g, start_station, end_station, weight, directed):
 def print_graph(g):
 
     for key in g.edges.keys():
-        print('V: ', key)
+        name = get_station_name(key)
+        print('V: ', name, ' - ', key)
         print('-----')
         val = g.edges[key]
         while val is not None:
-            print(' - ', val.station_id)
+
+            print(' - ', val.station_name, ', ', val.station_id)
+            # print(' - ', val.station_id)
             val = val.next_station
         print('-----')
 
@@ -123,13 +158,11 @@ def find_shortest_path(qraph, start, end):
 
     while len(q) != 0:
         curr = heapq.heappop(q)
-        while curr[0] < shortest_path[curr[1]]:
+        while curr[0] > shortest_path[curr[1]]:
             curr = heapq.heappop(q)
 
         curr = curr[1]
         curr_edge = qraph.edges[curr]
-
-
 
         while curr_edge is not None:
             dist = shortest_path[curr] + curr_edge.weight
@@ -154,17 +187,7 @@ ef = ('E', 'F', 1)
 ec = ('E', 'C', 9)
 fc = ('F', 'C', 3)
 
-edges = [ab, ad, bd, be, df, de, ef, ec, fc]
 
-graph = Graph()
-read_graph(graph, edges, False)
-p, j = find_shortest_path(graph, 'A', 'C')
-
-# print key: val where key = vertex, val = distance (or cost or time) from start vertex
-print('{')
-for key, value in p.items():
-    print(key, ': ', int(value), ',')
-print('}')
 
 # print out the path taken from start to end
 # with subway trains, we can edit this to print path of stations needed
@@ -183,6 +206,33 @@ def print_path(res, start, end):
     return path[::-1]
 
 def return_prev(res, end):
+    name = stations[stations['Route ID'] == res[end]]['Stop Name']
+    print(name.values)
     return res[end]
 
-print(print_path(j, 'A', 'C'))
+
+
+if __name__ == "__main__":
+    # Uncomment to read edges (instead of building whole  edge file from stop_times file)
+    edges = pd.read_csv('./mta-graph/edges.csv')
+
+    # edges = [ab, ad, bd, be, df, de, ef, ec, fc]
+
+    graph = Graph()
+    read_graph(graph, edges, False)
+
+    p,j = find_shortest_path(graph, '709', 'Q04')
+
+    print(print_path(j, '709', 'Q04'))
+
+    # print key: val where key = vertex, val = distance (or cost or time) from start vertex
+    # print('{')
+    # for key, value in p.items():
+    #     print(key, ': ', int(value), ',')
+    # print('}')
+    #
+    # print('{')
+    # for key, value in j.items():
+    #     print(key, ': ', int(value), ',')
+    # print('}')
+    #
