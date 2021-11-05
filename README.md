@@ -1,7 +1,5 @@
-I take the train to Connecticut throughout the week, first riding the subway to get to the station for the commuter rail. 
+The New York MTA makes available an API as well as static data for their transportation systems. Using both of these. I build an application that finds upcoming trains from a given station, with optionality to select 'favorite' stations to add to your dashboard.
 
-This Flask + Twilio + MTA api application sends via text a list of upcoming subway trains at a given station. 
+The frontend is built using React, though is very much still a work in progress. The backend is written in Python and uses the Flask framework. 
 
-Text your station to the number and receive the list of trains!
-
-Currently only works for northbound trains on the 4/5/6 line, soon to be expanded
+I also built a graph data structure that uses Dijkstra's algorithm to find the shortest route between two given subway stops.
